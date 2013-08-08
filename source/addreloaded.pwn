@@ -12,11 +12,11 @@ main() { }
 //				PRE-PROCESSOR DEFINES:
 					#define		GAMEMODE_TEXT		"AAD Reloaded "GAMEMODE_VERSION""
 					#define 	GAMEMODE_DEBUG		1
+					#define 	GAMEMODE_FOLDER		"AAD-R/"
 					
 // 				INCLUDES:
 					#include 	<a_samp>
-					#include    <a_zones>
-					#include 	<a_mysql>
+					#include 	<sqlitei>
 					#include 	<sscanf2>
 					#include 	<streamer>
 					#include 	<zcmd>
@@ -24,7 +24,20 @@ main() { }
 					
 //				FORWARDS:
 //					N/A
-					
+	
+//				STRUCTURES:
+
+enum playerStructure {
+	pInfoLabel,
+	pAdminLevel,
+	Float: pHealth,
+	Float: pArmour,
+	pTotalKills,
+	pTotalDeaths,
+	pSessionKills,
+	pSessionDeaths
+};
+	
 //				GLOBAL VARIABLES:		
 					new			globalStringVar[128];
 					
@@ -55,6 +68,38 @@ public OnGameModeInit() {
 	#if GAMEMODE_DEBUG == 1
 		printf("DEBUG: Server Hostname set to \"%s ["GAMEMODE_STAGE"]\".", localServerHostname);
 	#endif
+	
+	if(!fexist(""GAMEMODE_FOLDER"AAD-Reloaded.db")) {
+	
+		#if GAMEMODE_DEBUG == 1
+			printf("DEBUG: The database \""GAMEMODE_FOLDER"AAD-Reloaded.db\" does not exist, creating..", localServerHostname);
+		#endif
+		
+		new DB: gamemodeDatabase = db_open(""GAMEMODE_FOLDER"AAD-Reloaded.db");
+		db_query(gamemodeDatabase, "CREATE TABLE `accounts` IF NOT EXISTS \
+								(`account_id` INTEGER PRIMARY KEY  NOT NULL  UNIQUE , \
+								`account_name` VARCHAR, \
+								`account_password` VARCHAR, \
+								`account_kills` INTEGER NOT NULL  DEFAULT 0, \
+								`account_deaths` INTEGER NOT NULL  DEFAULT 0)");
+
+		if(!fexist(""GAMEMODE_FOLDER"AAD-Reloaded.db")) {
+		
+			#if GAMEMODE_DEBUG == 1
+				print("DEBUG: The database \""GAMEMODE_FOLDER"AAD-Reloaded.db\" has failed to create - maybe the folder does not exist.");
+				print("DEBUG: Gamemode terminated.");
+			#endif
+			
+			SendRconCommand("exit");
+			
+		} else {
+		
+			#if GAMEMODE_DEBUG == 1
+				print("DEBUG: The database \""GAMEMODE_FOLDER"AAD-Reloaded.db\" has been created.");
+			#endif
+			
+		}
+	}
 	return 1;
 }
 
@@ -63,5 +108,13 @@ public OnGameModeExit() {
 	#if GAMEMODE_DEBUG == 1
 		print("DEBUG: \"OnGameModeExit()\" executed.");
 	#endif	
+	return 1;
+}
+
+public OnPlayerConnect(playerid) {
+
+	#if GAMEMODE_DEBUG == 1
+		printf("DEBUG: \"OnPlayerConnect(%d)\" executed.", playerid);
+	#endif
 	return 1;
 }
