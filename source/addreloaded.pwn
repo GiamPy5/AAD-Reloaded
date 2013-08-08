@@ -1,4 +1,4 @@
-//				AAD Reloaded
+//				AAD Reloaded - "AAD Reloaded is an Attack and Defense gamemode written in PAWN for the SA:MP modification."
 
 main() { }
 
@@ -9,18 +9,26 @@ main() { }
 //				LAST UPDATE: (Times are written in GMT +1)
 					#define		LAST_UPDATE 		"07-AUG-2013 23:35"
 					
-//				PRE-PROCESSOR DEFINES:
-					#define		GAMEMODE_TEXT		"AAD Reloaded "GAMEMODE_VERSION""
-					#define 	GAMEMODE_DEBUG		1
-					#define 	GAMEMODE_FOLDER		"AAD-R/"
-					
 // 				INCLUDES:
 					#include 	<a_samp>
 					#include 	<sqlitei>
 					#include 	<sscanf2>
 					#include 	<streamer>
 					#include 	<zcmd>
-					#include    <YSI\y_iterate>
+					#include    <YSI\y_iterate>					
+					
+//				PRE-PROCESSOR DEFINES:
+					#undef 		MAX_PLAYERS
+					#define 	MAX_PLAYERS			40 // Specify the amount of your server slots.
+					
+					#undef		MAX_VEHICLES
+					#define 	MAX_VEHICLES		120 // Specify the amount of vehicles that may be spawned - usually it's three times the MAX_PLAYERS variable.
+					
+					#define 	MAX_BASES			10 // Currently only 10 bases may be loaded in the gamemode.
+					
+					#define		GAMEMODE_TEXT		"AAD Reloaded "GAMEMODE_VERSION""
+					#define 	GAMEMODE_DEBUG		1
+					#define 	GAMEMODE_FOLDER		"AAD-R/"
 					
 //				FORWARDS:
 //					N/A
@@ -28,16 +36,28 @@ main() { }
 //				STRUCTURES:
 
 enum playerStructure {
-	pInfoLabel,
 	pAdminLevel,
-	Float: pHealth,
-	Float: pArmour,
 	pTotalKills,
 	pTotalDeaths,
 	pSessionKills,
-	pSessionDeaths
+	pSessionDeaths,
+	Text3D: pInfoLabel, // Con
+	Float: pHealth,
+	Float: pArmour
 };
-	
+
+enum baseStructure {
+	bDatabaseID,
+	bTimesPlayed,
+	bName[64],
+	Float: bAtkSpawn[4], // Attack team spawn.
+	Float: bDefSpawn[4], // Defense team spawn.
+	Float: bCheckSpawn[3] // Checkpoint spawn.
+};
+
+					new playerVariables[MAX_PLAYERS][playerStructure];
+					new baseVariables[MAX_BASES][baseStructure];
+
 //				GLOBAL VARIABLES:		
 					new			globalStringVar[128];
 					
@@ -69,21 +89,22 @@ public OnGameModeInit() {
 		printf("DEBUG: Server Hostname set to \"%s ["GAMEMODE_STAGE"]\".", localServerHostname);
 	#endif
 	
-	if(!fexist(""GAMEMODE_FOLDER"AAD-Reloaded.db")) {
+	if(!fexist(""GAMEMODE_FOLDER"Database/AAD-Reloaded.db")) {
 	
 		#if GAMEMODE_DEBUG == 1
-			printf("DEBUG: The database \""GAMEMODE_FOLDER"AAD-Reloaded.db\" does not exist, creating..", localServerHostname);
+			printf("DEBUG: The database \""GAMEMODE_FOLDER"Database/AAD-Reloaded.db\" does not exist, creating..", localServerHostname);
 		#endif
 		
-		new DB: gamemodeDatabase = db_open(""GAMEMODE_FOLDER"AAD-Reloaded.db");
-		db_query(gamemodeDatabase, "CREATE TABLE `accounts` IF NOT EXISTS \
-								(`account_id` INTEGER PRIMARY KEY  NOT NULL  UNIQUE , \
-								`account_name` VARCHAR, \
-								`account_password` VARCHAR, \
-								`account_kills` INTEGER NOT NULL  DEFAULT 0, \
-								`account_deaths` INTEGER NOT NULL  DEFAULT 0)");
-
-		if(!fexist(""GAMEMODE_FOLDER"AAD-Reloaded.db")) {
+		new DB: gamemodeDatabase = db_open(""GAMEMODE_FOLDER"Database/AAD-Reloaded.db");
+		
+		// Creating the table 'accounts' and adding the colums 'account_id', 'account_name', 'account_password', 'account_kills' and 'account_deaths'.
+		db_query(gamemodeDatabase, "CREATE TABLE IF NOT EXISTS `accounts` (`account_id` INTEGER PRIMARY KEY NOT NULL UNIQUE)");
+		db_query(gamemodeDatabase, "ALTER TABLE `accounts` ADD `account_name` VARCHAR");
+		db_query(gamemodeDatabase, "ALTER TABLE `accounts` ADD `account_password` VARCHAR");
+		db_query(gamemodeDatabase, "ALTER TABLE `accounts` ADD `account_kills` INTEGER NOT NULL DEFAULT 0");
+		db_query(gamemodeDatabase, "ALTER TABLE `accounts` ADD `account_deaths` INTEGER NOT NULL  DEFAULT 0");
+		
+		if(!fexist(""GAMEMODE_FOLDER"Database/AAD-Reloaded.db")) {
 		
 			#if GAMEMODE_DEBUG == 1
 				print("DEBUG: The database \""GAMEMODE_FOLDER"AAD-Reloaded.db\" has failed to create - maybe the folder does not exist.");
