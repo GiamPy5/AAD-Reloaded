@@ -1,39 +1,39 @@
-//				AAD Reloaded - "AAD Reloaded is an Attack and Defense gamemode written in PAWN for the SA:MP modification."
+//	AAD Reloaded - "AAD Reloaded is an Attack and Defense gamemode written in PAWN for the SA:MP modification."
 
 main() { }
 
-//				REVISION:
-					#define 	GAMEMODE_VERSION 		"0.0.1"
-					#define		GAMEMODE_STAGE			"PRE-ALPHA"
+//	REVISION:
+	#define 	GAMEMODE_VERSION 		"0.0.1"
+	#define		GAMEMODE_STAGE			"PRE-ALPHA"
 
-//				LAST UPDATE: (Times are written in GMT +1)
-					#define		LAST_UPDATE 		"07-AUG-2013 23:35"
+//	LAST UPDATE: (Times are written in GMT +1)
+	#define		LAST_UPDATE 		"08-AUG-2013 18:13"
 					
-// 				INCLUDES:
-					#include 	<a_samp>
-					#include 	<sqlitei>
-					#include 	<sscanf2>
-					#include 	<streamer>
-					#include 	<zcmd>
-					#include    <YSI\y_iterate>					
+// 	INCLUDES:
+	#include 	<a_samp>
+	#include 	<sqlitei>
+	#include 	<sscanf2>
+	#include 	<streamer>
+	#include 	<zcmd>
+	#include    <YSI\y_iterate>
 					
-//				PRE-PROCESSOR DEFINES:
-					#undef 		MAX_PLAYERS
-					#define 	MAX_PLAYERS			40 // Specify the amount of your server slots.
+//	PRE-PROCESSOR DEFINES:
+	#undef 		MAX_PLAYERS
+	#define 	MAX_PLAYERS			40 // Specify the amount of your server slots.
 					
-					#undef		MAX_VEHICLES
-					#define 	MAX_VEHICLES		120 // Specify the amount of vehicles that may be spawned - usually it's three times the MAX_PLAYERS variable.
+	#undef		MAX_VEHICLES
+	#define 	MAX_VEHICLES		120 // Specify the amount of vehicles that may be spawned - usually it's three times the MAX_PLAYERS variable.
 					
-					#define 	MAX_BASES			10 // Currently only 10 bases may be loaded in the gamemode.
+	#define 	MAX_BASES			10 // Currently only 10 bases may be loaded in the gamemode.
 					
-					#define		GAMEMODE_TEXT		"AAD Reloaded "GAMEMODE_VERSION""
-					#define 	GAMEMODE_DEBUG		1
-					#define 	GAMEMODE_FOLDER		"AAD-R/"
+	#define		GAMEMODE_TEXT		"AAD Reloaded "GAMEMODE_VERSION""
+	#define 	GAMEMODE_DEBUG		1
+	#define 	GAMEMODE_FOLDER		"AAD-R/"
 					
-//				FORWARDS:
-//					N/A
+//	FORWARDS:
+//	N/A
 	
-//				STRUCTURES:
+//	STRUCTURES:
 
 enum playerStructure {
 	pAdminLevel,
@@ -41,7 +41,7 @@ enum playerStructure {
 	pTotalDeaths,
 	pSessionKills,
 	pSessionDeaths,
-	Text3D: pInfoLabel, // Con
+	Text3D: pInfoLabel, // Containing FPS, Ping and Packet Loss information of the player.
 	Float: pHealth,
 	Float: pArmour
 };
@@ -55,13 +55,13 @@ enum baseStructure {
 	Float: bCheckSpawn[3] // Checkpoint spawn.
 };
 
-					new playerVariables[MAX_PLAYERS][playerStructure];
-					new baseVariables[MAX_BASES][baseStructure];
+	new playerVariables[MAX_PLAYERS][playerStructure];
+	new baseVariables[MAX_BASES][baseStructure];
 
-//				GLOBAL VARIABLES:		
-					new			globalStringVar[128];
-					
-//				PUBLICS:
+//	GLOBAL VARIABLES:		
+	new			globalString[128];
+	
+//	PUBLICS:
 
 public OnGameModeInit() {
 
@@ -81,10 +81,10 @@ public OnGameModeInit() {
 	GetServerVarAsString("hostname", localServerHostname, sizeof(localServerHostname));
 	
 	// Formatting the RCON command to change the hostname.
-	format(globalStringVar, sizeof(globalStringVar), "hostname %s ["GAMEMODE_STAGE"]", localServerHostname);
+	format(globalString, sizeof(globalString), "hostname %s ["GAMEMODE_STAGE"]", localServerHostname);
 	
 	// Executing the RCON command (es. hostname Server Name [PRE-ALPHA]).
-	SendRconCommand(globalStringVar);	
+	SendRconCommand(globalString);	
 	#if GAMEMODE_DEBUG == 1
 		printf("DEBUG: Server Hostname set to \"%s ["GAMEMODE_STAGE"]\".", localServerHostname);
 	#endif
@@ -120,6 +120,8 @@ public OnGameModeInit() {
 			#endif
 			
 		}
+		
+		db_close(gamemodeDatabase);
 	}
 	return 1;
 }
@@ -137,5 +139,41 @@ public OnPlayerConnect(playerid) {
 	#if GAMEMODE_DEBUG == 1
 		printf("DEBUG: \"OnPlayerConnect(%d)\" executed.", playerid);
 	#endif
+	
+	format(globalString, sizeof(globalString), "{FFFFFF}* {C2D1D1}%s{FFFFFF} has joined from the server.",  playerName(playerid));
+	SendClientMessageToAll(-1, globalString);
+	
+	format(globalString, sizeof(globalString), "{FFFFFF}Welcome in the server, {C2D1D1}%s{FFFFFF}.",  playerName(playerid));
+	SendClientMessage(playerid, -1, globalString);
 	return 1;
+}
+
+public OnPlayerDisconnect(playerid, reason) {
+
+	#if GAMEMODE_DEBUG == 1
+		printf("DEBUG: \"OnPlayerDisconnect(%d, %d)\" executed.", playerid, reason);
+	#endif
+	
+	switch(reason) {
+		case 0: format(globalString, sizeof(globalString), "{FFFFFF}* {C2D1D1}%s{FFFFFF} has left from the server (crashed).",  playerName(playerid));
+		case 1: format(globalString, sizeof(globalString), "{FFFFFF}* {C2D1D1}%s{FFFFFF} has left from the server (disconnected).",  playerName(playerid));
+		case 2: format(globalString, sizeof(globalString), "{FFFFFF}* {C2D1D1}%s{FFFFFF} has left from the server (kicked/banned).",  playerName(playerid));		
+	}
+	
+	SendClientMessageToAll(-1, globalString);	
+	return 1;
+}
+
+//	STOCKS:
+
+stock playerName(playerid) {
+
+	#if GAMEMODE_DEBUG == 1
+		printf("DEBUG: \"playerName(%d)\" executed.", playerid);
+	#endif
+
+	new localName[MAX_PLAYER_NAME+1];
+	
+	GetPlayerName(playerid, localName, sizeof(localName));	
+	return localName;
 }
