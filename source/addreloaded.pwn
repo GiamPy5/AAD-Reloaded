@@ -193,7 +193,7 @@ public OnPlayerConnect(playerid) {
 			
 		} else {
 		
-			format(globalDialog, sizeof(globalDialog), "This account already exists, if this is not yours please quit and change your nickname.\n\nIn order to play in \"{DAE3DF}%s{FFFFFF}\" you must login in your account.\nPlease, insert the password of your account:", serverVariables[sHostname]);
+			format(globalDialog, sizeof(globalDialog), "{FFFFFF}This account already exists, if this is not yours please quit and change your nickname.\n\nIn order to play in \"{DAE3DF}%s{FFFFFF}\" you must login in your account.\nPlease, insert the password of your account:", serverVariables[sHostname]);
 			ShowPlayerDialog(playerid, DIALOG_ACCOUNT_LOGIN, DIALOG_STYLE_PASSWORD, "{FFFFFF}Account Login", globalDialog, "Login", "Quit");
 
 		}
