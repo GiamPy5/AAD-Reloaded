@@ -41,6 +41,10 @@ main() { }
 	#define 	ATTACK_SUB_SKIN					3
 	#define 	DEFEND_SUB_SKIN					4
 	
+	#define 	ATTACK_TEAM						0
+	#define 	DEFEND_TEAM						1
+	#define 	REFEREE_TEAM					2
+	
 //	DIALOGS:
 	#define 	DIALOG_ACCOUNT_REGISTER 		0
 	#define 	DIALOG_ACCOUNT_LOGIN			1	
@@ -60,6 +64,7 @@ enum playerStructure {
 	pTotalDeaths,
 	pSessionKills,
 	pSessionDeaths,
+	pTeam,
 	
 	bool: pStatus,	
 	// Player statuses are the following ones:
@@ -100,7 +105,7 @@ enum serverStructure {
 	sHostname[128],
 	bool: sRoundPaused,
 	bool: sActiveRound,
-	
+
 	Float: sAtkSkinPos[4],
 	Float: sAtkSkinCameraPos[3],
 	Float: sAtkSkinCameraLookAt[3],
@@ -115,7 +120,7 @@ enum serverStructure {
 
 	Float: sMainSpawn[4],
 };
-
+	
 	new playerVariables[MAX_PLAYERS][playerStructure];
 	new baseVariables[MAX_BASES][baseStructure];
 	new serverVariables[serverStructure];
@@ -202,9 +207,13 @@ public OnGameModeInit() {
 		db_close(gamemodeDatabase);
 	}
 	else
-		loadServerSettings();
-	
-	AddPlayerClass(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		loadServerSettings();	
+		
+	AddPlayerClassEx(serverTeam[ATTACK_TEAM], serverVariables[sSkin][ATTACK_SKIN], serverVariables[sMainSpawn][0], serverVariables[sMainSpawn][1], serverVariables[sMainSpawn][2], serverVariables[sMainSpawn][3], 0, 0, 0, 0, 0, 0);
+	AddPlayerClassEx(serverTeam[DEFEND_TEAM], serverVariables[sSkin][DEFEND_SKIN], serverVariables[sMainSpawn][0], serverVariables[sMainSpawn][1], serverVariables[sMainSpawn][2], serverVariables[sMainSpawn][3], 0, 0, 0, 0, 0, 0);
+	AddPlayerClassEx(serverTeam[REFEREE_TEAM], serverVariables[sSkin][REFEREE_SKIN], serverVariables[sMainSpawn][0], serverVariables[sMainSpawn][1], serverVariables[sMainSpawn][2], serverVariables[sMainSpawn][3], 0, 0, 0, 0, 0, 0);
+	AddPlayerClassEx(serverTeam[ATTACK_TEAM], serverVariables[sSkin][ATTACK_SUB_SKIN], serverVariables[sMainSpawn][0], serverVariables[sMainSpawn][1], serverVariables[sMainSpawn][2], serverVariables[sMainSpawn][3], 0, 0, 0, 0, 0, 0);
+	AddPlayerClassEx(serverTeam[DEFEND_TEAM], serverVariables[sSkin][DEFEND_SUB_SKIN], serverVariables[sMainSpawn][0], serverVariables[sMainSpawn][1], serverVariables[sMainSpawn][2], serverVariables[sMainSpawn][3], 0, 0, 0, 0, 0, 0);		
 	return 1;
 }
 
