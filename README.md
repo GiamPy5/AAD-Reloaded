@@ -1,4 +1,4 @@
-AAD Reloaded
+AAD Reloaded (abandoned)
 ===========
 
 AAD Reloaded is an Attack and Defense gamemode written in PAWN for the San Andreas Multiplayer modification (http://sa-mp.com/).
